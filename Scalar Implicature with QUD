@@ -1,0 +1,85 @@
+// setting: 3 apples visible, none/some/all could be red.
+// QUD could be: “Are all of the apples red?”, "Are any of the apple red?"
+
+// possible states of the world
+var states = [0, 1, 2, 3]
+var statePrior = function() {
+  return uniformDraw(states)
+}
+
+// possible utterances
+var utterancePrior = function() {
+  return uniformDraw(['all', 'some', 'none'])
+}
+
+// cost function for utterances
+var cost = function(utterance){
+  utterance == "all" ? 1 :
+  utterance == "some" ? 1 :
+  utterance == "none" ? 1 :
+  0
+}
+
+// meaning function to interpret the utterances
+var literalMeanings = {
+  all: function(state) { return state === 3; },
+  some: function(state) { return state > 0; },
+  none: function(state) { return state === 0; }
+}
+
+// QUD
+var quds = ['areAll', 'areAny']
+///
+
+// Prior over QUDs
+var qudPrior = function() {
+ return uniformDraw(quds)
+}
+
+// projection function
+var qudFn = function(qud, state) {
+  var qudAdressed = qud === "areAll" ? state === 3 : state > 0 //?
+  return qudAdressed
+}
+
+// literal listener
+var literalListener = cache(function(utt, qud) {
+  return Infer({model: function(){
+    var state = statePrior()
+    var meaning = literalMeanings[utt]
+    condition(meaning(state))
+    return qudFn(qud, state)
+  }})
+})
+
+// set speaker optimality
+var alpha = 1
+
+// pragmatic speaker
+var speaker = cache(function(state, qud) {
+  return Infer({model: function(){
+    var utt = utterancePrior()
+    factor(alpha * (literalListener(utt, qud).score(qudFn(qud, state)) - cost(utt)))
+    return utt
+  }})
+})
+
+// pragmatic listener
+var pragmaticListener = cache(function(utt, qud) {
+  return Infer({model: function(){
+    var state = statePrior()
+    observe(speaker(state, qud),utt)
+    return state
+  }})
+})
+
+
+display("literal listener's interpretation of 'some':")
+viz(literalListener('none', 'areAll'))
+
+display("pragmatic listener's interpretation of 'some':")
+viz(pragmaticListener("none", "areAll"))
+// problem: when hearing 'all' with 'areAny' qud, pragmatic listener interprete
+// equal possibility of 1, 2, or 3 red apples -> should still only 3 apples possible
+// And when hearing 'none' with 'areAny' qud, pragmatic listener gets
+// equal possibility of 0, 1, or 2 red apples, as well.
