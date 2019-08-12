@@ -43,12 +43,12 @@ var qudFn = function(qud, state) {
 }
 
 // literal listener
-var literalListener = cache(function(utt, qud) {
+var literalListener = cache(function(utt, qud) { // add qud as an argument -> interpretation in respect to qud
   return Infer({model: function(){
     var state = statePrior()
     var meaning = literalMeanings[utt]
     condition(meaning(state))
-    return qudFn(qud, state)
+    return qudFn(qud, state) // result is a truth value: Does the state suits the qud?
   }})
 })
 
@@ -60,7 +60,7 @@ var speaker = cache(function(state, qud) {
   return Infer({model: function(){
     var utt = utterancePrior()
     factor(alpha * (literalListener(utt, qud).score(qudFn(qud, state)) - cost(utt)))
-    return utt
+    return utt  // literalListener(utt, qud).score(qudFn(qud, state) -> Probability of the state under the condition of the utterance. in respect to whether the qud is T or F
   }})
 })
 
@@ -68,7 +68,7 @@ var speaker = cache(function(state, qud) {
 var pragmaticListener = cache(function(utt, qud) {
   return Infer({model: function(){
     var state = statePrior()
-    observe(speaker(state, qud),utt)
+    observe(speaker(state, qud),utt) // listener's inference on speaker's utterance in respect to the state and qud
     return state
   }})
 })
