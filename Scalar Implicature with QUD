@@ -42,7 +42,7 @@ var qudFn = function(qud, state) {
   return qudAdressed
 }
 
-// literal listener
+// literal listener // conditioning on the literal semantics
 var literalListener = cache(function(utt, qud) { // add qud as an argument -> interpretation in respect to qud
   return Infer({model: function(){
     var state = statePrior()
