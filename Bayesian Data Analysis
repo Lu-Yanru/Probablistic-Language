@@ -1,0 +1,20 @@
+// estimate which modal (L0 litListener or L1 pragmaListener with alpha = 1) suits the data better
+
+var total_observations = 180
+var observed_successes = 115
+var LH_literalLister = Math.exp(Binomial({n: total_observations,
+                                          p: 0.5}).score(observed_successes)) //p: probabiliy of success, score function: log probability of all observed successes // literal listener correctly infering the referent
+var LH_pragmatLister = Math.exp(Binomial({n: total_observations,
+                                          p: 0.6}).score(observed_successes))
+var posterior_literalListener = LH_literalLister /  //the probability P(M∣D) of the literal listener model given the data
+    (LH_literalLister + LH_pragmatLister)
+display(posterior_literalListener)
+
+var posterior_pragmaticListener = LH_pragmatLister /  //the probability P(M∣D) of the pragmatic listener model given the data
+    (LH_literalLister + LH_pragmatLister)
+display(posterior_pragmaticListener)
+
+// more observed success, more likely is pragmatic listener. Less observed successes, more likely is literal listener.
+// With successes/total around 0.5, literal listener modal more likely, successes/total rate around 0.6, pragmatic listener  modal more likely, in between uncertainty.
+// As num of total observations goes up (proportion of observed successes remains the same), pragmaListener even more likely. -> addding more data gives us more certainty about models, intermediate range becomes sharper
+// Bay's factor: probability of pragmaListener/probability of litListener, fairly confident about a better modal if >= 10.
