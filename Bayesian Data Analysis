@@ -98,3 +98,76 @@ viz(posterior_samples)
 // interpretation: not completely irrational
 
 // if increase the amount of data: data shift less from the uniform to gamma prior (the more data the less the prior matters), because there is less uncertainty (less reliance on what we already know)
+
+
+
+
+
+
+// Full example
+var salience_priors = { //"Which could the speaker possibly be talking about?"
+  blue_circle:   71,  // object "blue circle" was selected 71 times
+  green_square: 139,  // diff color makes the object salient -> most likely to be selected
+  blue_square:   30,
+}
+
+var prod_data = {
+  blue_circle:  {blue:  9, circle: 135, green:   0, square:  0},
+  green_square: {blue:  0, circle:   0, green: 119, square: 25}, // asymmetric preference, bias for producing a shape term compared to a color term -> shapes are nouns and color are adj, usu use nouns to refer to adj, color term may be more costly than shape terms in this experiment? 
+  blue_square:  {blue: 63, circle:   0, green:   0, square: 81}
+}
+
+var comp_data = {
+  blue:   {blue_circle: 65, green_square:   0, blue_square: 115},
+  square: {blue_circle:  0, green_square: 117, blue_square:  62}
+}
+
+// put salience prior into object prior
+// prior over world states
+var objectPrior = function() {
+  categorical({ps: _.values(salience_priors), // empirical data
+               vs: _.keys(salience_priors)}) // diff objects
+}
+
+Infer({model: objectPrior})
+
+// Diff cost for shape and color
+// function for utterance costs
+var cost = function(utterance, c) {
+  (utterance === "blue" || utterance === "green") ? c : 0
+}
+
+// pragmatic speaker
+var speaker = function(obj, alpha, c){
+  Infer({model: function(){
+    var utterance = uniformDraw(utterances)
+    factor(alpha * (literalListener(utterance).score(obj) -
+                    cost(utterance,c)))
+    return utterance
+  }})
+}
+
+// pragmatic listener also receives cost term 'c'
+// pragmatic listener
+var pragmaticListener = function(utterance, alpha, c){
+  Infer({model: function(){
+    var obj = objectPrior()
+    observe(speaker(obj, alpha, c),utterance)
+    return obj
+  }})
+}
+
+// model parameters
+var alpha = 1
+var c = 0 // if increase cost of color terms, speaker less likely to use the term, pragmatic listener take into account that speaker 
+
+// display full probability tables
+
+display("literal listener")
+display(condProb2Table(literalListener, utterances, states,2))
+
+display("speaker")
+display(condProb2Table(function(s) {speaker(s,alpha,c)}, states, utterances,2))
+
+display("pragmatic listener")
+display(condProb2Table(function(u) {pragmaticListener(u,alpha,c)}, utterances, states,2))
