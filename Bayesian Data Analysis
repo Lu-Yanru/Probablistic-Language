@@ -18,3 +18,83 @@ display(posterior_pragmaticListener)
 // With successes/total around 0.5, literal listener modal more likely, successes/total rate around 0.6, pragmatic listener  modal more likely, in between uncertainty.
 // As num of total observations goes up (proportion of observed successes remains the same), pragmaListener even more likely. -> addding more data gives us more certainty about models, intermediate range becomes sharper
 // Bay's factor: probability of pragmaListener/probability of litListener, fairly confident about a better modal if >= 10.
+
+
+
+
+// estimate the value of alpha
+
+// Frank and Goodman (2012) RSA model
+
+///fold:
+
+// set of states (here: objects of reference)
+var states = ["blue_circle", "green_square", "blue_square"]
+
+// set of utterances
+var utterances = ["blue","green","square","circle"]
+
+// prior over world states
+var objectPrior = function() {
+  uniformDraw(states)
+}
+
+// meaning function to interpret the utterances
+var meaning = function(utterance, obj){
+  _.includes(obj, utterance)
+}
+
+// literal listener
+var literalListener = function(utterance){
+  Infer({model: function(){
+    var obj = objectPrior();
+    condition(meaning(utterance, obj))
+    return obj
+  }})
+}
+
+// pragmatic speaker
+var speaker = function(obj, alpha){ //alpha is now an argument
+  Infer({model: function(){
+    var utterance = uniformDraw(utterances)
+    factor(alpha * literalListener(utterance).score(obj))
+    return utterance
+  }})
+}
+
+// pragmatic listener
+var pragmaticListener = function(utterance, alpha){ //alpha is now an argument
+  Infer({model: function(){
+    var obj = objectPrior()
+    observe(speaker(obj, alpha),utterance) // pass alpha to the speaker function
+    return obj
+  }})
+}
+
+///
+
+// Data analysis
+
+var non_normalized_posterior = function(){
+  // prior over model parameter
+  var alpha = uniform({a:0, b:10}) // sampling alpha uniformly from the range 0 to 10
+  var predicted_probability =
+      Math.exp(
+        pragmaticListener("blue", alpha).score("blue_square")
+      )
+  var likelihood = Binomial({n: 180, p: predicted_probability}).score(115)   // score function: probability that the number of successes if assume alpha = sample is going to be 115 
+  factor(likelihood)
+  return {alpha} // distribution of alpha by taking the observed data under differente alpha sampled
+}
+
+var posterior_samples = Infer({
+  method: "MCMC", // a way of computing Bayesian by sampling from distributions
+  samples: 10000, // how many samples to obtain
+  burn: 1500,     // number of steps for algorithm to adapt
+  model: non_normalized_posterior})
+
+viz(posterior_samples)
+// result: peak at around 1.3
+// interpretation: not completely irrational
+
+// if increase the amount of data: data shift less from the uniform to gamma prior (the more data the less the prior matters), because there is less uncertainty (less reliance on what we already know)
