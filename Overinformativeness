@@ -136,3 +136,11 @@ var speaker = cache(function(state) {
 
 viz(speaker({"size": "big", "color": "blue"}))
 viz.table(literalListener("big_blue"))
+
+// central idea:
+// if modifiers are noisy, adding modifiers adds utility
+//-> overinformativeness as rationally redundant referring expressions
+
+// other aspects:
+// level of reference
+// typicality effects
