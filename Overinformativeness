@@ -1,0 +1,52 @@
+var alpha = 1
+var c = 0
+
+var states = ["big_blue","small_blue","small_red"]
+
+var utterances = ["big", "small", "blue", "red", "big_blue", "small_blue", "small_red"]     	
+
+var statePrior = function() {
+	return uniformDraw(states)
+};
+
+var utterancePrior = function() {
+  return uniformDraw(utterances)
+};
+
+var meaning = function(utterance, obj){
+  _.includes(obj, utterance) // boolean semantics instead of degree
+}
+
+var cost = {
+	big: 0,
+	small: 0,
+	blue: 0,
+	red: 0,
+	big_blue: c,
+	small_blue: c,
+	small_red: c
+}
+
+// literal listener
+var literalListener = cache(function(utt) {
+  return Infer({method:"enumerate"},
+               function(){
+    var state = statePrior()
+    condition(meaning(utt,state))
+    return state
+  })
+});
+
+// pragmatic speaker
+var speaker = cache(function(state) {
+  return Infer({method:"enumerate"},
+               function(){
+    var utt = utterancePrior()
+    factor(alpha * (literalListener(utt).score(state)-cost[utt]))
+    return utt
+  })
+});
+
+speaker("big_blue")
+// one way to eliminate the possibility of saying only "blue" -> increase alpha
+// reduce possibility of saying "big" -> usu complex utterances more costly
