@@ -1,3 +1,4 @@
+//Parameter estimation
 // estimate which modal (L0 litListener or L1 pragmaListener with alpha = 1) suits the data better
 
 var total_observations = 180
@@ -171,3 +172,4 @@ display(condProb2Table(function(s) {speaker(s,alpha,c)}, states, utterances,2))
 
 display("pragmatic listener")
 display(condProb2Table(function(u) {pragmaticListener(u,alpha,c)}, utterances, states,2))
+
