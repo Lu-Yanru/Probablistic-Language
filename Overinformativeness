@@ -63,7 +63,7 @@ speaker("big_blue")
 // non-deterministic semantics -> intermediate value btw 0-1
 var alpha = 30
 var size_fidelity = 0.8 // lower fidelity, more noise, less usefull if produced in addition to color term (when only color term necessary)/alone (when sitz alone necessary)
-var color_fidelity = 0.99
+var color_fidelity = 0.99  // increased color/size redundancy due to relatively low fidelity, while more size redundancy than color redundacy
 var size_cost = 0  // can get asymmetry in production without assuming asymmetry in cost
 var color_cost = 0
 
